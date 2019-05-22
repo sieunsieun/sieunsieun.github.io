@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+  <head>
+      <style type="text/css" >
+      #wrapper {
+          width:850px;
+          margin :250 auto ;
+          border:1px solid #ff6481;
+  }
+      body{
+        font-family: sans-serif;
+      }
+      body{
+      font-size : 14px;
+      }
+          </style>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="./assets/css/main.css">
+
+    <title>技術応用演習</title>
+  </head>
+  <body>
+    <div style="margin-left:300px;margin-right:150px;">
+      <h1><font size="38pt">技術応用演習</font></h1>
+      <br>
+        <h1><font size="5pt">Unity</font></h1>
+      <br>
+
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/cOyKdoN6lQM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<br>
+<h1><font size="5pt">Drone</font></h1>
+<br>
+ドローンでJ、Nを書いた。 <br>
+<div id="wrapper">
+<p><font size="3pt"><strong>Jの移動式</strong></font></p>
+
+
+<br><br>
+<pre>
+  # write "J"
+# 必要なモジュールのインポート
+import socket
+import threading
+import time
+import sys
+
+# telloのIPアドレスとポート
+tello_address = ('192.168.10.1', 8889)
+
+# ローカルコンピュータのIPアドレスとポート
+local_address = ('', 9000)
+
+# コマンドを送るためのUDP接続のの実体化
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+# ローカルアドレスとポートのバインディング
+sock.bind(local_address)
+
+# telloへのコマンドの送信とディレイタイム（秒）生成関数
+def send(message, delay):
+    # 例外が表示されなかった場合，telloにエンコードされたコマンドを送信する
+    try:
+        sock.sendto(message.encode(), tello_address)
+        print("Sending message: " + message)
+    except Exception as e:
+        print("Error sending: " + str(e))
+
+    # ユーザーが定義した移動待ち時間（秒）
+    time.sleep(delay)
+
+# telloからのメッセージ受信関数
+def receive():
+    # telloからのメッセージ受信を常態化
+    while True:
+        # 例外が表示されなかった場合，受信状態を保つ
+        try:
+            response, ip_address = sock.recvfrom(128)
+            print("Received message: " + response.decode(encoding='utf-8'))
+        except Exception as e:
+            # もしエラー検出された場合，ソケットを閉じ，ループを終了する
+            sock.close()
+            print("Error receiving: " + str(e))
+            break
+
+
+# シークエンス関数
+def sequence():
+    # ここにシークエンスを書き込む. 引数は2つで第一引数は"コマンド 移動距離（cm）”，第二引数はディレイタイム
+#############################################################################################
+    send("up 250", 4)
+    send("down 190", 4)
+    send("left 40", 4)
+    send("down 40", 4)
+    send("left 20", 4)
+    send("down 20", 4)
+    send("left 20", 4)
+    send("up 30", 4)
+    send("left 40", 4)
+    send("up 40", 4)
+#############################################################################################
+    # ここまでは追記・削除おk．あとはいじらないこと!
+
+
+# ここからがメインの実行処理
+# バックグラウンド実行されるスレッドを作り，スタートする
+# これはreceive関数を利用して，telloから送信されたメッセージを常態的に受信する
+receiveThread = threading.Thread(target=receive)
+receiveThread.daemon = True
+receiveThread.start()
+
+# telloをコマンドモードにセット
+send("command", 3)
+# 離陸コマンドの送信
+send("takeoff", 5)
+
+# ユーザーのコマンド入力のヘルプを表示
+print('Type in a Tello SDK command and press the enter key. Enter "start" to start sequence. Enter "quit" to exit this program.')
+
+# ユーザーが”quit”もしくは"start"をタイプするか，ctrl+cを押すまで，コマンド入力待ちをループ実行する
+while True:
+
+    try:
+        # ユーザーのキーボード入力を読み込み
+        message = input('')
+        # もしユーザーが”quit”を入力したら，ソケットを閉じアプリケーション終了
+        if 'quit' in message:
+            # Land
+            send("land", 5)
+            print("Program exited sucessfully")
+            sock.close()
+            break
+        # もしユーザーが”start”を入力したら，シークエンス開始
+        elif 'start' in message:
+            sequence()
+            message = ''
+
+        # telloにコマンドを送信
+        send(message, 3)
+
+    # ctrl+cの入力があった場合の制御
+    except KeyboardInterrupt as e:
+        send("land", 5)
+        sock.close()
+        break
+        </pre>
+
+<br><p><font size="3pt"><strong>Nの移動式</strong></font></p>
+
+
+<br><br>
+<pre>
+# write "N"
+# 必要なモジュールのインポート
+import socket
+import threading
+import time
+import sys
+
+# telloのIPアドレスとポート
+tello_address = ('192.168.10.1', 8889)
+
+# ローカルコンピュータのIPアドレスとポート
+local_address = ('', 9000)
+
+# コマンドを送るためのUDP接続のの実体化
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+# ローカルアドレスとポートのバインディング
+sock.bind(local_address)
+
+# telloへのコマンドの送信とディレイタイム（秒）生成関数
+def send(message, delay):
+    # 例外が表示されなかった場合，telloにエンコードされたコマンドを送信する
+    try:
+        sock.sendto(message.encode(), tello_address)
+        print("Sending message: " + message)
+    except Exception as e:
+        print("Error sending: " + str(e))
+
+    # ユーザーが定義した移動待ち時間（秒）
+    time.sleep(delay)
+
+# telloからのメッセージ受信関数
+def receive():
+    # telloからのメッセージ受信を常態化
+    while True:
+        # 例外が表示されなかった場合，受信状態を保つ
+        try:
+            response, ip_address = sock.recvfrom(128)
+            print("Received message: " + response.decode(encoding='utf-8'))
+        except Exception as e:
+            # もしエラー検出された場合，ソケットを閉じ，ループを終了する
+            sock.close()
+            print("Error receiving: " + str(e))
+            break
+
+
+# シークエンス関数
+def sequence():
+    # ここにシークエンスを書き込む. 引数は2つで第一引数は"コマンド 移動距離（cm）”，第二引数はディレイタイム
+#############################################################################################
+    send("up 200", 4)
+    send("left 80", 4)
+    send("down 80", 4)
+    send("left 80", 4)
+    send("down 80", 4)
+    send("left 50", 4)
+    send("down 80", 4)
+    send("up 200", 4)
+#############################################################################################
+    # ここまでは追記・削除おk．あとはいじらないこと!
+
+
+# ここからがメインの実行処理
+# バックグラウンド実行されるスレッドを作り，スタートする
+# これはreceive関数を利用して，telloから送信されたメッセージを常態的に受信する
+receiveThread = threading.Thread(target=receive)
+receiveThread.daemon = True
+receiveThread.start()
+
+# telloをコマンドモードにセット
+send("command", 3)
+# 離陸コマンドの送信
+send("takeoff", 5)
+
+# ユーザーのコマンド入力のヘルプを表示
+print('Type in a Tello SDK command and press the enter key. Enter "start" to start sequence. Enter "quit" to exit this program.')
+
+# ユーザーが”quit”もしくは"start"をタイプするか，ctrl+cを押すまで，コマンド入力待ちをループ実行する
+while True:
+
+    try:
+        # ユーザーのキーボード入力を読み込み
+        message = input('')
+        # もしユーザーが”quit”を入力したら，ソケットを閉じアプリケーション終了
+        if 'quit' in message:
+            # Land
+            send("land", 5)
+            print("Program exited sucessfully")
+            sock.close()
+            break
+        # もしユーザーが”start”を入力したら，シークエンス開始
+        elif 'start' in message:
+            sequence()
+            message = ''
+
+        # telloにコマンドを送信
+        send(message, 3)
+
+    # ctrl+cの入力があった場合の制御
+    except KeyboardInterrupt as e:
+        send("land", 5)
+        sock.close()
+        break
+<br></pre>
+</div>
+  </body>
+</html>
